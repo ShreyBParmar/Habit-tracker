@@ -15,35 +15,18 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
-// Robust CORS Middleware
-const clientUrl = process.env.CLIENT_URL || '*';
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://localhost:5174',
-];
-
-if (clientUrl && clientUrl !== '*') {
-  const cleanUrl = clientUrl.replace(/\/$/, '');
-  allowedOrigins.push(cleanUrl);
-  allowedOrigins.push(`${cleanUrl}/`);
-}
-
+// Universal Fail-Safe CORS Configuration
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, postman) or matching origins
-      if (!origin || clientUrl === '*' || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
-        callback(null, true);
-      } else {
-        callback(null, true); // Fallback allow for Vercel preview deployments
-      }
-    },
+    origin: true, // Reflect request origin (e.g. Vercel frontend, local dev)
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   })
 );
+
+// Explicit preflight OPTIONS response for all routes
+app.options('*', cors());
 
 app.use(express.json());
 
