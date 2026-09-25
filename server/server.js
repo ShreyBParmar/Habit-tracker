@@ -12,11 +12,18 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
-// 1. ABSOLUTE TOP: Bulletproof Global CORS & Preflight Response Middleware
+// 1. ABSOLUTE TOP: W3C Spec Compliant CORS & Preflight Response Middleware
 app.use((req, res, next) => {
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  const origin = req.headers.origin;
+  
+  // W3C CORS Rule: If Credentials=true, Allow-Origin MUST match requesting origin explicitly (not '*')
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
 
@@ -27,7 +34,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 // 2. Connect to MongoDB
