@@ -12,23 +12,26 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// 1. ABSOLUTE TOP: Bulletproof Global CORS & Preflight Response Middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
 
-// Universal Fail-Safe CORS Configuration
-app.use(
-  cors({
-    origin: true, // Reflect request origin (e.g. Vercel frontend, local dev)
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  })
-);
+  // Instant 200 OK response for preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
-// Explicit preflight OPTIONS response for all routes
-app.options('*', cors());
-
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+
+// 2. Connect to MongoDB
+connectDB();
 
 // API Routes
 app.use('/api/auth', authRoutes);
